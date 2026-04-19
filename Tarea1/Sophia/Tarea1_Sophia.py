@@ -1,6 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import os
 from pathlib import Path
 
 # Estilo visual base
@@ -117,7 +118,10 @@ plt.savefig(output_path, dpi=300, bbox_inches="tight")
 
 backend_name = plt.get_backend().lower()
 if "agg" in backend_name:
-	print(f"Gráfico guardado en: {output_path}")
-	print("Backend no interactivo detectado; no se abrirá ventana de visualización.")
-else:
-	plt.show()
+    try:
+        plt.switch_backend("TkAgg")
+    except Exception:
+        print(f"Gráfico guardado en: {output_path}")
+        print("No se pudo abrir ventana interactiva con el backend actual.")
+
+plt.show()
