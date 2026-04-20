@@ -125,3 +125,104 @@ if "agg" in backend_name:
         print("No se pudo abrir ventana interactiva con el backend actual.")
 
 plt.show()
+
+
+# ================================================
+# GRÁFICO ZOOM: Zona de interés (1990-2020)
+# ================================================
+zoom_start, zoom_end = 1990, 2020
+
+# Filtramos solo los años relevantes
+zoom_mask = (stream_data.index >= zoom_start) & (stream_data.index <= zoom_end)
+stream_zoom = stream_data.loc[zoom_mask]
+rating_zoom = rating_by_year.loc[rating_by_year.index.isin(stream_zoom.index)]
+
+if not stream_zoom.empty and not rating_zoom.empty:
+    fig_zoom, ax1z = plt.subplots(figsize=(14, 7))
+
+    ax1z.stackplot(
+        stream_zoom.index,
+        stream_zoom.T.values,
+        labels=stream_zoom.columns,
+        baseline="zero",
+        colors=palette,
+        alpha=0.85,
+    )
+
+    ax1z.set_xlabel("Año")
+    ax1z.set_ylabel("Cantidad de novelas")
+    ax1z.set_title("Streamgraph ZOOM: Cantidad de novelas por año y género (1990-2020) + rating promedio anual")
+    ax1z.grid(True, linestyle="--", alpha=0.4)
+
+    # Eje secundario (rating)
+    ax2z = ax1z.twinx()
+    ax2z.plot(
+        rating_zoom.index,
+        rating_zoom.values,
+        color="black",
+        linewidth=2.4,
+        marker="o",
+        markersize=4,
+        label="Rating promedio por año",
+    )
+    ax2z.set_ylabel("Rating promedio")
+    ax2z.set_ylim(0, 5)
+
+    # Leyendas
+    ax1z.legend(
+        title=f"Top {top_n_genres} géneros",
+        loc="upper left",
+        bbox_to_anchor=(1.05, 1),
+        borderaxespad=0,
+    )
+    ax2z.legend(loc="upper left", bbox_to_anchor=(1.05, 0.55), borderaxespad=0)
+
+	# === AÑOS EXACTOS DE INTERÉS (calculados automáticamente del dato) ===
+    total_by_year = stream_zoom.sum(axis=1)
+
+    # Pico 1: máximo aproximado cerca del 2005
+    peak1_year = total_by_year.loc[2000:2010].idxmax()
+
+    # Baja: mínimo entre 2005 y 2010
+    dip_year = total_by_year.loc[2005:2010].idxmin()
+
+    # Pico 2: máximo entre 2010 y 2015
+    peak2_year = total_by_year.loc[2010:2015].idxmax()
+
+    print(f"📍 Pico 1 detectado exactamente en: {peak1_year}")
+    print(f"📍 Baja detectada exactamente en: {dip_year}")
+    print(f"📍 Pico 2 detectado exactamente en: {peak2_year}")
+
+    # Dibujar las 3 líneas verticales en el gráfico
+    ax1z.axvline(peak1_year, color='purple', linestyle='--', linewidth=2.2, alpha=0.9, label=f'Alza 1 ({peak1_year})')
+    ax1z.axvline(dip_year, color='yellow', linestyle='--', linewidth=2.2, alpha=0.9, label=f'Baja ({dip_year})')
+    ax1z.axvline(peak2_year, color='purple', linestyle='--', linewidth=2.2, alpha=0.9, label=f'Alza 2 ({peak2_year})')
+
+    # Actualizar leyenda para que incluya las líneas verticales
+    ax1z.legend(
+        title=f"Top {top_n_genres} géneros + puntos clave",
+        loc="upper left",
+        bbox_to_anchor=(1.05, 1),
+        borderaxespad=0,
+    )
+    
+	# Leyenda del rating ahora en la esquina superior derecha (dentro del gráfico)
+    ax2z.legend(
+        loc="upper right",
+        bbox_to_anchor=(0.98, 0.95),
+        borderaxespad=0,
+        frameon=True,
+        facecolor="white",
+        edgecolor="gray",
+        fontsize=9
+    )
+
+    plt.tight_layout()
+
+    output_zoom = Path(__file__).resolve().with_name("streamgraph_novelas_rating_ZOOM_1990-2020.png")
+    plt.savefig(output_zoom, dpi=300, bbox_inches="tight")
+    print(f"✅ Gráfico ZOOM guardado en: {output_zoom}")
+
+    plt.show()
+else:
+    print("⚠️ No hay datos suficientes para generar el gráfico zoom.")
