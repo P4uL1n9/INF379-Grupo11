@@ -9,16 +9,28 @@ import matplotlib.pyplot as plt
 from pywaffle import Waffle
 import os
 import glob
+import kagglehub
+import numpy as np
+import matplotlib.colors as mcolors
+import squarify
+import ast
+import warnings
+warnings.filterwarnings('ignore')
 
-# 1. Leer el dataset real descargado
-cache_dir = os.path.expanduser("~/.cache/kagglehub/datasets/thedevastator/comprehensive-overview-of-52478-goodreads-best-b")
-csv_files = glob.glob(os.path.join(cache_dir, '**', '*.csv'), recursive=True)
+
+# 1. DESCARGAR Y CARGAR EL DATASET DE FORMA SEGURA
+print("Verificando/Descargando dataset desde Kaggle...")
+path = kagglehub.dataset_download("thedevastator/comprehensive-overview-of-52478-goodreads-best-b")
+print(f"Dataset localizado en: {path}")
+
+# Buscar el archivo CSV en el directorio descargado de forma dinámica
+csv_files = [f for f in os.listdir(path) if f.endswith('.csv')]
 
 if not csv_files:
-    print("Error: No se encontró el dataset.")
+    print("Error: No se encontró ningún archivo CSV.")
     exit(1)
 
-dataset_path = csv_files[0]
+dataset_path = os.path.join(path, csv_files[0])
 print(f"Leyendo datos reales de: {dataset_path}")
 
 df = pd.read_csv(dataset_path)
@@ -103,10 +115,7 @@ plt.text(
 )
 
 # Guardar
-output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'waffle_idiomas_total.png')
-plt.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='#FAFAFA')
-
-output_path_hq = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'waffle_idiomas_total_HQ.png')
+output_path_hq = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'waffle_idiomas_total.png')
 plt.savefig(output_path_hq, dpi=600, bbox_inches='tight', facecolor='#FAFAFA')
 
 print("\nVisualización completa de todo el dataset ejecutada con éxito.")
